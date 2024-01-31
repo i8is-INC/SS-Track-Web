@@ -30,7 +30,7 @@ function CompanyOwner() {
         Authorization: "Bearer " + token,
     };
     const timeline = useSelector((state) => state.timeline)
-    const loading = useSelector((state) => state)
+    const loading = useSelector((state) => state.loading)
     const dispatch = useDispatch()
     // var pusher = new Pusher('334425b3c859ed2f1d2b', {
     //     cluster: 'ap2'
