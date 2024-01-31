@@ -21,6 +21,7 @@ import line from "../images/line.webp";
 
 
 function AdminReport1() {
+    console.log("asdsad");
     return (
         <div>
             <section>
