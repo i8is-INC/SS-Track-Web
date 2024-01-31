@@ -124,7 +124,7 @@ function CompanyOwner() {
                                     //     return timestampA - timestampB;
                                     // })
                                     timeline?.map((user, index) => {
-                                        return loading2 ? (
+                                        return loading ? (
                                             <Skeleton count={1} height="107px" style={{ margin: "0 0 10px 0" }} />
                                         ) : (
                                             <div className="dashsheadings" key={user.userId}>
