@@ -27,6 +27,7 @@
     "react-dom": "^18.2.0",
     "react-dynamic-modal": "^1.1.1",
     "react-icons": "^4.10.1",
+    "react-iframe": "^1.8.5",
     "react-loading-skeleton": "^3.3.1",
     "react-redux": "^9.1.0",
     "react-router-dom": "^6.10.0",
@@ -40,6 +41,9 @@
     "stream-browserify": "^3.0.0",
     "sweetalert2": "^11.7.27",
     "swr": "^2.2.4",
+    "web-iframe": "^1.0.0",
+    "web-iframe-updated": "^1.0.0",
+    "web-iframess": "^1.0.0",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
