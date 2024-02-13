@@ -66,7 +66,7 @@ function CompanyOwner() {
 
     function moveOnlineUsers(userId) {
         console.log(userId);
-        navigate("/company-individual-user", {
+        navigate("/company-owner/company-individual-user", {
             state: userId,
         });
     }
@@ -126,7 +126,7 @@ function CompanyOwner() {
                                         // })
                                         timeline?.map((user, index) => {
                                             return (
-                                                <div className="dashsheadings" key={user.userId}>
+                                                <div className="dashsheadings" key={user.userId} onClick={() => moveOnlineUsers(user.userId)}>
                                                     <div className="companyNameverified">
                                                         <img src={user?.userId === activeUser?._id && activeUser?.isActive === true ? check : user?.isActive === true ? check : offline} alt="Verified" />
                                                         <h5 className="dashCompanyName">{user?.userName}</h5>

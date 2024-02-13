@@ -52,8 +52,33 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.cdnfonts.com/css/euclid-circular-a');
 
+@font-face {
+  font-family: "Euclid-light";
+  src: url(./font/Euclid/Euclid\ Circular\ B\ Light.ttf);
+}
+
+@font-face {
+  font-family: "Euclid-medium";
+  src: url(./font/Euclid/Euclid\ Circular\ B\ Medium.ttf);
+}
+
+@font-face {
+  font-family: "Euclid-regular";
+  src: url(./font/Euclid/Euclid\ Circular\ B\ Regular.ttf);
+}
+
+@font-face {
+  font-family: "Euclid-bold";
+  src: url(./font/Euclid/Euclid\ Circular\ B\ Bold.ttf);
+}
+
+@font-face {
+  font-family: "Euclid-semibold";
+  src: url(./font/Euclid/Euclid\ Circular\ B\ SemiBold.ttf);
+}
+
 * {
-  font-family: 'Poppins', sans-serif !important;
+  font-family: "Euclid-medium";
 }
 
 .App {
@@ -806,8 +831,8 @@ nav li a {
 }
 
 .dashCompanyName {
-  margin: 0;
-  font-size: 20px;
+  /* margin: 0; */
+  font-size: 25px;
   font-weight: 500;
   margin-left: 10px;
   color: #0E4772;
@@ -1281,6 +1306,7 @@ nav li a {
   font-size: 18px;
   font-weight: 400;
   margin: 0;
+  width: 230px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1407,7 +1433,7 @@ nav li a {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
+  padding: 5px 10px;
 }
 
 .websiteLink {
@@ -1436,7 +1462,7 @@ nav li a {
   width: 100%;
   height: auto;
   background-color: #E8F4FC;
-  padding: 9px 30px 17px 30px;
+  /* padding: 9px 30px 17px 30px; */
   /* border-radius: 10px; */
   /* margin-top: 10px; */
 }
@@ -2529,13 +2555,17 @@ input[type=checkbox]:checked:before {
 }
 
 .fiveSection {
-  display: grid;
+  display: flex;
   align-items: center;
-  grid-template-columns: 26% 26% 26%;
   justify-content: space-between;
-  /* gap: 20px; */
   align-items: flex-start;
+  text-align: left;
   margin-top: 100px;
+  padding: 40px;
+}
+
+.fiveSection div {
+  width: 500px;
 }
 
 /* .reportImage{
@@ -2543,6 +2573,7 @@ input[type=checkbox]:checked:before {
   display: block;
   margin: auto;
 } */
+
 .wifi {
   display: block;
   margin: 0 auto;
@@ -2560,6 +2591,7 @@ input[type=checkbox]:checked:before {
   font-size: 20px;
   font-weight: 400;
   color: #0E4772;
+  margin: 0;
   text-align: center;
 }
 
@@ -2692,7 +2724,7 @@ input[type=checkbox]:checked:before {
   background-color: transparent;
   padding: 5px 10px;
   margin-top: 10px;
-  margin-right: 10px;
+  /* margin-right: 10px; */
   cursor: pointer;
 }
 
@@ -4922,9 +4954,10 @@ input.checkboxes:checked {
 }
 
 .hour-color {
-  background-color: #EFF9EC;
-  border: 1px solid #e3e3e3;
+  /* background-color: #EFF9EC; */
+  border: 1.5px solid #e3e3e3;
   text-align: center;
+  color: #0E4772;
 }
 
 /* Customize the scrollbar for webkit-based browsers */

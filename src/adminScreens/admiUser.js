@@ -40,6 +40,7 @@ import { GetTimelineUserSuperAdmin } from "../middlewares/timeline";
 import { selectUserTimeline } from "../store/timelineSlice";
 import { useDispatch, useSelector } from "react-redux";
 // import { CaptureScreenshot } from "../screen/component/captureScreenshot";
+import moment from "moment-timezone";
 
 function AdminUser() {
 
@@ -104,6 +105,8 @@ function AdminUser() {
     const dispatch = useDispatch()
     const userTimeline = useSelector((state) => state.userTimeline)
     const showUserTimeline = useSelector((state) => state.showTimelineData)
+    const [deleteActivity, setDeleteActivity] = useState(false)
+
     // var pusher = new Pusher('334425b3c859ed2f1d2b', {
     //     cluster: 'ap2'
     // });
@@ -226,12 +229,26 @@ function AdminUser() {
     };
 
     const fetchData = async () => {
-        const findTimeline = userTimeline?.find((f) => f.formattedDate === formattedDate)
-        if (findTimeline) {
-            dispatch(selectUserTimeline({ findTimeline, formattedDate }))
+        // const findTimeline = userTimeline?.find((f) => f.formattedDate === formattedDate)
+        // if (findTimeline) {
+        //     dispatch(selectUserTimeline({ findTimeline, formattedDate }))
+        // }
+        // else {
+        //     dispatch(GetTimelineUserSuperAdmin({ userId, formattedDate, headers }))
+        // }
+        try {
+            const response = await axios.get(`${apiUrl}/superAdmin/sorted-datebased/${userId}?date=${encodeURIComponent(formattedDate)}`, { headers });
+            if (response.data) {
+                setData(response.data.data);
+                setTimeBill(response.data.data.timeBill);
+                setTimeEntries(response?.data?.data?.groupedScreenshots || []);
+                setTimeTrackingId(response.data.data.TimeTrackingId)
+                setTrimActivity({ ...trimActivity, totalHours: response?.data?.data?.totalHours.daily })
+                console.log(response);
+            }
         }
-        else {
-            dispatch(GetTimelineUserSuperAdmin({ userId, formattedDate, headers }))
+        catch (error) {
+            console.log(error);
         }
     };
 
@@ -299,7 +316,7 @@ function AdminUser() {
             console.log(error);
         }
     }
-    
+
     useEffect(() => {
         getAllDays()
     }, [activeMonth]);
@@ -439,8 +456,8 @@ function AdminUser() {
                         horizontal: "right"
                     }
                 })
+                fetchData()
             }
-            fetchData()
         } catch (error) {
             console.log(error);
             enqueueSnackbar("network error", {
@@ -457,32 +474,55 @@ function AdminUser() {
         setShowOfflineTime(false)
         setShowTrimActivity(false)
         setShowSplitActivity(false)
-        const formattedStartTime = formattedDate + " " + trimActivity?.startTime;
-        const formattedEndTime = formattedDate + " " + trimActivity?.endTime;
         const timeEntryId = trimActivity?.timeentryId
-
-        try {
-            const response = await axios.patch(`${apiUrl}/superAdmin/trim-activity/${userId}/${timeEntryId}`, {
-                startTime: formattedStartTime,
-                endTime: formattedEndTime,
-            }, {
-                headers: {
-                    Authorization: 'Bearer ' + token
-                }
-            });
-            if (response.status === 200) {
-                enqueueSnackbar(response.data.data.message, {
-                    variant: "success",
-                    anchorOrigin: {
-                        vertical: "top",
-                        horizontal: "right"
+        if (deleteActivity === false) {
+            const formattedStartTime = formattedDate + " " + trimActivity?.startTime;
+            const formattedEndTime = formattedDate + " " + trimActivity?.endTime;
+            try {
+                const response = await axios.patch(`${apiUrl}/superAdmin/trim-activity/${userId}/${timeEntryId}`, {
+                    startTime: formattedStartTime,
+                    endTime: formattedEndTime,
+                }, {
+                    headers: {
+                        Authorization: 'Bearer ' + token
                     }
-                })
-                fetchData()
-                console.log(response);
+                });
+                if (response.status === 200) {
+                    enqueueSnackbar(response.data.data.message, {
+                        variant: "success",
+                        anchorOrigin: {
+                            vertical: "top",
+                            horizontal: "right"
+                        }
+                    })
+                    fetchData()
+                    console.log(response);
+                }
+            } catch (error) {
+                console.log(error);
             }
-        } catch (error) {
-            console.log(error);
+        }
+        else {
+            try {
+                const response = await axios.delete(`${apiUrl}/superAdmin/time-tracking/${timeTrackingId}/activity/${timeEntryId}`, {
+                    headers: {
+                        Authorization: 'Bearer ' + token
+                    }
+                });
+                if (response.status === 200) {
+                    enqueueSnackbar(response.data.message, {
+                        variant: "success",
+                        anchorOrigin: {
+                            vertical: "top",
+                            horizontal: "right"
+                        }
+                    })
+                    fetchData()
+                    console.log(response);
+                }
+            } catch (error) {
+                console.log(error);
+            }
         }
     };
 
@@ -578,7 +618,16 @@ function AdminUser() {
         set_current_month(months[currentMonth])
     }, [])
 
-    console.log({ activeMonth })
+    const offsetInMinutes = moment.tz(items?.timezone).utcOffset();
+    const offsetInHours = offsetInMinutes / 60;
+    const offsetSign = offsetInHours >= 0 ? '+' : '-';
+    const formattedOffset = `${offsetSign}${Math.abs(offsetInHours)}`;
+
+    const handleDivClick = () => {
+        setDeleteActivity(!deleteActivity);
+    };
+
+    console.log({ deleteActivity });
 
     return (
         <div>
@@ -625,7 +674,7 @@ function AdminUser() {
                             <p>-{trimActivity?.totalHours ? trimActivity?.totalHours : "0h 0m"}</p>
                         </div>
                         <p className="sevenAm">eg 7am to 9:10am or 17:30 to 22:00</p>
-                        <div>
+                        {/* <div>
                             <select className="projectOption" defaultValue="">
                                 <option>Infiniti Solutions</option>
                                 <option>Y8HR</option>
@@ -633,11 +682,11 @@ function AdminUser() {
                                 <option>Geox HR</option>
                                 <option>Click HR</option>
                             </select>
-                        </div>
+                        </div> */}
                         <textarea placeholder="Note (optional)" rows="5" ></textarea>
                         <div className="deleteActivityPart">
-                            <div style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
-                                <input id="editcheck" type="checkbox" />
+                            <div style={{ cursor: "pointer", display: "flex", alignItems: "center" }} onClick={handleDivClick}>
+                                <input id="editcheck" type="checkbox" checked={deleteActivity} onChange={(e) => setDeleteActivity(e.target.checked)} />
                                 <p style={{ margin: "0 0 0 10px", padding: 0 }}>Delete this activity</p>
                             </div>
                             <p style={{ margin: 0, cursor: "pointer" }} onClick={() => {
@@ -734,23 +783,21 @@ function AdminUser() {
             <SnackbarProvider />
             <div className="container">
                 <div className="mainwrapper">
-
                     <div className="userHeader">
                         <div className="headerTop">
-                            <h5><img src={circle} alt="" /> {showUserTimeline?.name}</h5>
+                            <h5><img src={circle} alt="" /> {data?.name}</h5>
                         </div>
                         <div className="headerTop">
-                            <p>All times are UTC + {items.timezoneOffset}</p>
+                            <p>All times are UTC {formattedOffset}</p>
                             <img src={setting} alt="setting.png" style={{ cursor: "pointer" }} onClick={() => navigate("/adminaccount")} />
                         </div>
                     </div>
-
                     <div className="userMainContent">
                         <div>
                             <div className="calendar-container">
                                 <div className="header">
                                     <img src={left} onClick={prevMonth} alt="Previous Month" />
-                                    <h2 className="monthName">{date.toLocaleString("en-US", { month: "long" })}</h2>
+                                    <h2 className="monthName">{date.toLocaleString("en-US", { month: "long", year: "numeric" })}</h2>
                                     <img src={right} onClick={nextMonth} alt="Next Month" />
                                 </div>
                             </div>
@@ -764,19 +811,19 @@ function AdminUser() {
                                         <p className="weekDayTimer">{formattedDate == todayDate ? days[currentDay] : days[clickDay]} </p>
                                         <p className="weekDayTimer">{formattedDate && formattedDate.split('-')[2]}</p>
                                         <p className="weekDateTimer">{formattedDate == todayDate ? months[currentMonth] : months[month]}</p>
-                                        <OverlayTrigger placement="top" overlay={<Tooltip>{Math.floor(showUserTimeline?.totalactivity)} %</Tooltip>}>
+                                        <OverlayTrigger placement="top" overlay={<Tooltip>{Math.floor(data?.totalactivity)} %</Tooltip>}>
                                             <div className="circular-progress" style={{
                                                 cursor: "pointer"
                                             }}>
-                                                <CircularProgressBar activityPercentage={showUserTimeline?.totalactivity} size={30} />
+                                                <CircularProgressBar activityPercentage={data?.totalactivity} size={30} />
                                             </div>
                                         </OverlayTrigger>
-                                        <p className="timerClock">{showUserTimeline?.totalHours?.daily}</p>
+                                        <p className="timerClock">{data?.totalHours?.daily}</p>
                                         <p className="weekTimer">Week</p>
-                                        <p className="weekTimerDigit">{showUserTimeline?.totalHours?.weekly}</p>
+                                        <p className="weekTimerDigit">{data?.totalHours?.weekly}</p>
                                         <img src={circleDot} alt="CircleDot.png" />
                                         <p className="weekTimer">Month</p>
-                                        <p className="monthTimerDigit">{showUserTimeline?.totalHours?.monthly}</p>
+                                        <p className="monthTimerDigit">{data?.totalHours?.monthly}</p>
                                     </div>
                                 </div>
                                 <div className="activity-image-container">
@@ -814,17 +861,17 @@ function AdminUser() {
                                                     <div
                                                         className="needleContainerMainAlingment"
                                                         style={{
-                                                            transform: `translateY(-50%) rotate(${Math.floor(showUserTimeline?.totalactivity) <= 20 ? -75 :
-                                                                Math.floor(showUserTimeline?.totalactivity) > 20 && Math.floor(showUserTimeline?.totalactivity) <= 40 ? -38 :
-                                                                    Math.floor(showUserTimeline?.totalactivity) > 40 && Math.floor(showUserTimeline?.totalactivity) <= 60 ? 0 :
-                                                                        Math.floor(showUserTimeline?.totalactivity) > 60 && Math.floor(showUserTimeline?.totalactivity) <= 80 ? 35 :
-                                                                            Math.floor(showUserTimeline?.totalactivity) > 80 ? 75 : -108
+                                                            transform: `translateY(-50%) rotate(${Math.floor(data?.totalactivity) <= 20 ? -75 :
+                                                                Math.floor(data?.totalactivity) > 20 && Math.floor(data?.totalactivity) <= 40 ? -38 :
+                                                                    Math.floor(data?.totalactivity) > 40 && Math.floor(data?.totalactivity) <= 60 ? 0 :
+                                                                        Math.floor(data?.totalactivity) > 60 && Math.floor(data?.totalactivity) <= 80 ? 35 :
+                                                                            Math.floor(data?.totalactivity) > 80 ? 75 : -108
                                                                 }deg)`
                                                         }}>
                                                         <div className="needleContainerAlingment">
                                                             <div className="diamond"></div>
                                                             <div className="needlePointerMain"></div>
-                                                            <OverlayTrigger placement="bottom" overlay={<Tooltip>{Math.floor(showUserTimeline?.totalactivity)} %</Tooltip>}>
+                                                            <OverlayTrigger placement="bottom" overlay={<Tooltip>{Math.floor(data?.totalactivity)} %</Tooltip>}>
                                                                 <div className="needleScrewMain"></div>
                                                             </OverlayTrigger>
                                                         </div>
@@ -835,13 +882,11 @@ function AdminUser() {
                                     </div>
                                 </div>
                             </div>
-
                             <div className="time-scale" style={{ display: "flex" }}>
                                 {renderTimeIntervals()}
                             </div>
-
                             <div>
-                                {showUserTimeline && (showUserTimeline?.groupedScreenshots?.map((element) => {
+                                {data && (data?.groupedScreenshots?.map((element) => {
                                     return (
                                         <div>
                                             {loading ? <Skeleton count={1} width="300px" height="34.5px" style={{ margin: "40px 0 0 0" }} /> : <div className="timeZone" onMouseOver={() => setShowEditButton(true)} onMouseOut={() => setShowEditButton(false)}>
@@ -886,35 +931,38 @@ function AdminUser() {
                                                     ) : (
                                                         <div className="projectAdd" onMouseOver={() => setShowDeleteButton(true)} onMouseOut={() => setShowDeleteButton(false)}>
                                                             <div className="timelineDiv">
-                                                                <OverlayTrigger placement="top" overlay={<Tooltip>{elements?.description}</Tooltip>}>
-                                                                    <p className="notes">
-                                                                        {elements?.time}
-                                                                        <a className="websiteLink" href="#">{elements?.description}</a>
-                                                                    </p>
-                                                                </OverlayTrigger>
-                                                                <img src={deleteIcon} alt="" style={{ marginRight: 15 }} onClick={() => handleOpenDeleteModal(element, elements)} />
-                                                                {elements?.visitedUrls?.length === 0 ?
-                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>0 %</Tooltip>}>
-                                                                        <div className="circular-progress">
-                                                                            <CircularProgressBar activityPercentage={100} size={30} emptyUrl={0} />
-                                                                        </div>
+                                                                <div>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{elements?.description}</Tooltip>}>
+                                                                        <p className="notes">
+                                                                            <a className="websiteLink" href="#">{elements?.time} {elements?.description}</a>
+                                                                        </p>
                                                                     </OverlayTrigger>
-                                                                    :
-                                                                    elements?.visitedUrls?.map((e) => {
-                                                                        return e?.activityPercentage === 0 ? (
-                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>0 %</Tooltip>}>
-                                                                                <div className="circular-progress">
-                                                                                    <CircularProgressBar activityPercentage={100} size={30} emptyUrl={0} />
-                                                                                </div>
-                                                                            </OverlayTrigger>
-                                                                        ) : (
-                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>{Math.floor(e?.activityPercentage)} %</Tooltip>}>
-                                                                                <div className="circular-progress">
-                                                                                    <CircularProgressBar activityPercentage={e?.activityPercentage} size={30} />
-                                                                                </div>
-                                                                            </OverlayTrigger>
-                                                                        )
-                                                                    })}
+                                                                </div>
+                                                                <div style={{ display: "flex" }}>
+                                                                    <img src={deleteIcon} alt="" style={{ marginRight: 5 }} onClick={() => handleOpenDeleteModal(element, elements)} />
+                                                                    {elements?.visitedUrls?.length === 0 ?
+                                                                        <OverlayTrigger placement="top" overlay={<Tooltip>0 %</Tooltip>}>
+                                                                            <div className="circular-progress">
+                                                                                <CircularProgressBar activityPercentage={0} emptyUrl={0} />
+                                                                            </div>
+                                                                        </OverlayTrigger>
+                                                                        :
+                                                                        elements?.visitedUrls?.map((e) => {
+                                                                            return e?.activityPercentage === 0 ? (
+                                                                                <OverlayTrigger placement="top" overlay={<Tooltip>0 %</Tooltip>}>
+                                                                                    <div className="circular-progress">
+                                                                                        <CircularProgressBar activityPercentage={0} emptyUrl={0} />
+                                                                                    </div>
+                                                                                </OverlayTrigger>
+                                                                            ) : (
+                                                                                <OverlayTrigger placement="top" overlay={<Tooltip>{Math.floor(e?.activityPercentage)} %</Tooltip>}>
+                                                                                    <div className="circular-progress">
+                                                                                        <CircularProgressBar activityPercentage={e?.activityPercentage} />
+                                                                                    </div>
+                                                                                </OverlayTrigger>
+                                                                            )
+                                                                        })}
+                                                                </div>
                                                             </div>
                                                             <div className="screenShotImg">
                                                                 <img className="screenshotiimage" onClick={() => openModal(element, elements?.key, index)} src={elements?.key} alt="ScreenShotImg.png" />
@@ -922,7 +970,6 @@ function AdminUser() {
                                                         </div>
                                                     )
                                                 }))}
-
                                                 {selectedImage && (
                                                     <div className="fullscreen-screenshot-model">
                                                         <div style={{ margin: "20px 20px 0 20px", textAlign: "right" }}>
@@ -954,18 +1001,14 @@ function AdminUser() {
                                     )
                                 }))}
                             </div>
-
-                            <div className="historyButton">
+                            {/* <div className="historyButton">
                                 <img className="historyImg" src={historyIcon} alt="HistoryIcon.png" />
                                 <p className="historyOfChanges">History of Changes</p>
-                            </div>
-
+                            </div> */}
                             {/* <div className="editBoxMainDiv">
                                 {changeEdit && <TimeEntryModal edit={edit} setEdit={setEdit} splitsActivity={splitsActivity} changeOffline={changeOffline} />}
                             </div> */}
-
                         </div>
-
                     </div>
                 </div>
                 <img className="userDetailLine" src={line} />
