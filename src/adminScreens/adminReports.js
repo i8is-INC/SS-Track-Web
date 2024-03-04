@@ -48,7 +48,7 @@ function AdminReports() {
         Authorization: 'Bearer ' + token,
     }
     const items = JSON.parse(localStorage.getItem('items'));
-    const apiUrl = "https://rich-rose-cormorant-vest.cyclic.app/api/v1";
+    const apiUrl = "https://gold-cloudy-moose.cyclic.app/api/v1";
 
     const getData = async () => {
         setLoading(true)

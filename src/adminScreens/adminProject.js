@@ -22,7 +22,7 @@ function AdminProject() {
     const headers = {
         Authorization: "Bearer " + token,
     };
-    const apiUrl = "https://rich-rose-cormorant-vest.cyclic.app/api/v1";
+    const apiUrl = "https://gold-cloudy-moose.cyclic.app/api/v1";
     const getData = async () => {
         try {
 
