@@ -15,7 +15,7 @@ function SystemAdminLogin() {
         password: ""
     });
     const [loading, setLoading] = useState(false)
-    const apiUrl = "https://combative-fox-jumpsuit.cyclic.app/api/v1";
+    const apiUrl = "https://rich-rose-cormorant-vest.cyclic.app/api/v1";
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('items'));
 

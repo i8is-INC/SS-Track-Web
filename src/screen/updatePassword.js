@@ -14,7 +14,7 @@ function UpdatePassword() {
     const navigate = useNavigate()
     const [password, setPassword] = useState("")
     const [loading, setLoading] = useState(false)
-    const apiUrl = "https://combative-fox-jumpsuit.cyclic.app/api/v1";
+    const apiUrl = "https://rich-rose-cormorant-vest.cyclic.app/api/v1";
 
     console.log(apiUrl);
 

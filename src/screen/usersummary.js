@@ -46,7 +46,7 @@ function UserSummary() {
         Authorization: 'Bearer ' + token,
     }
     const items = JSON.parse(localStorage.getItem('items'));
-    const apiUrl = "https://combative-fox-jumpsuit.cyclic.app/api/v1";
+    const apiUrl = "https://rich-rose-cormorant-vest.cyclic.app/api/v1";
     async function getSummaryData() {
         try {
             const response = await fetch(`${apiUrl}/timetrack/hours`, { headers })

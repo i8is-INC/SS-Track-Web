@@ -18,7 +18,7 @@
 //         Authorization: 'Bearer ' + token,
 //     }
 
-//     const apiUrl = "https://combative-fox-jumpsuit.cyclic.app/api/v1";
+//     const apiUrl = "https://rich-rose-cormorant-vest.cyclic.app/api/v1";
 
 //     async function getData() {
 //         try {
@@ -149,6 +149,9 @@ function AdminHead() {
                     </div> */}
                     <div className={location.pathname === "/adminteam" || location.pathname === "/admindashboard/admin-user-signup" ? "active-tab" : "ownerSectionUser"}>
                         <p style={{ margin: 0 }} onClick={() => navigate('/adminteam')}>Team</p>
+                    </div>
+                    <div className={location.pathname === "/admin-reports" ? "active-tab" : "ownerSectionUser"}>
+                        <p style={{ margin: 0 }} onClick={() => navigate('/admin-reports')}>Reports</p>
                     </div>
                     {/* <div className={location.pathname === "/setting" ? "active-tab" : "ownerSectionUser"}>
                         <p style={{ margin: 0 }} onClick={() => navigate('/setting')}>Settings</p>

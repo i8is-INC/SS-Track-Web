@@ -37,7 +37,7 @@ function OwnerTeam() {
     const [activeId, setActiveId] = useState(null)
     const [mainId, setMainId] = useState(null)
     const [users, setUsers] = useState(null);
-    const apiUrl = "https://combative-fox-jumpsuit.cyclic.app/api/v1";
+    const apiUrl = "https://rich-rose-cormorant-vest.cyclic.app/api/v1";
     const token = localStorage.getItem('token');
     const headers = {
         Authorization: "Bearer " + token,
@@ -256,7 +256,7 @@ function OwnerTeam() {
                     <div className="ownerTeamContainer">
                         <div className="d-flex gap-3">
                             <div style={{ width: "500px" }}>
-                                <p className="addUserButton" onClick={() => navigate('/admindashboard/admin-user-signup')}>+ Create user</p>
+                                <p className="addUserButton" onClick={() => navigate('/owner-team/company-owner-user-signup')}>+ Create user</p>
                                 <div style={{
                                     marginTop: "20px",
                                     display: "flex",

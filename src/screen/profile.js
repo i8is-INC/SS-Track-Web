@@ -30,7 +30,7 @@ function Profile() {
         'Content-Type': 'application/json'
     }
 
-    const apiUrl = "https://combative-fox-jumpsuit.cyclic.app/api/v1";
+    const apiUrl = "https://rich-rose-cormorant-vest.cyclic.app/api/v1";
 
     let fillModel = (key, val) => {
         console.log(val);
