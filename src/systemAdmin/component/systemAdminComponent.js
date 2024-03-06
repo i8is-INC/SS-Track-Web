@@ -18,7 +18,7 @@ function SystemAdminComponent(props) {
     const companyId = props?.fixComponent?.owner?._id
     const companyName = props?.fixComponent?.owner?.company
     const company = data?.owner?.company;
-    const apiUrl = "https://gold-cloudy-moose.cyclic.app/api/v1";
+    const apiUrl = "https://combative-fox-jumpsuit.cyclic.app/api/v1";
     let token = localStorage.getItem('adminToken');
     const companyStatus = props?.fixComponent?.owner?.isArchived;
     const [companyDetail, setCompanyDetail] = useState(null)
@@ -104,7 +104,7 @@ function SystemAdminComponent(props) {
                     <p className="employeeDetailName1">{props?.fixComponent?.owner?.name}</p>
                     <p className="employeeDetailName2">{props?.fixComponent?.owner?.email}</p>
                     <div style={{ margin: "30px 0" }}>
-                        <p className="employeeDetail">Employess</p>
+                        <p className="employeeDetail">Employees</p>
                     </div>
                     {/* {loading ? (
                         <Skeleton count={1} width="100%" height="600px" style={{ margin: "0" }} />
