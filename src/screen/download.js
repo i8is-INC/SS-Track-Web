@@ -61,7 +61,7 @@ const Download = () => {
                     <div className='download-card'>
                         <div>
                             {/* <h4>Download employee deskstop application for {downloadOS === "mac" ? "mac OS" : "windows"}</h4> */}
-                            <h4>Download employee deskstop application for windows</h4>
+                            <h4>Download employee desktop application for windows</h4>
                             <p>This application is <span style={{ fontWeight: "700", color: "#7ACB59" }}>for employess, managers</span></p>
                             <p>Company administrators can review the tracked hours and screenshots on this website.</p>
                             <img width={300} src={DownloadProduct} alt="" />

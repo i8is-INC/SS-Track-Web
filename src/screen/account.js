@@ -16,6 +16,7 @@ import { json, useNavigate } from "react-router-dom";
 import Modal from 'react-bootstrap/Modal';
 import { SnackbarProvider, enqueueSnackbar } from "notistack";
 import axios from "axios";
+import moment from "moment-timezone";
 
 function Account() {
 
@@ -104,7 +105,12 @@ function Account() {
         }
     }
 
-    console.log(updatePassword)
+    const offsetInMinutes = moment.tz(items.timezone).utcOffset();
+    const offsetInHours = offsetInMinutes / 60;
+    const offsetSign = offsetInHours >= 0 ? '+' : '-';
+    const formattedOffset = `${offsetSign}${Math.abs(offsetInHours)}`;
+
+    console.log(items)
 
     return (
         <div>
@@ -166,7 +172,7 @@ function Account() {
                             <br />
                             {items?.timezone}
                             <br />
-                            UTC+{items.timezoneOffset}
+                            UTC {formattedOffset}
                         </p>
                         <div className="accountDiv">
                             <div onClick={() => navigate('/profile')} className="accountEditDiv"><div><img src={edit} /></div><p>Edit Profile</p></div>
