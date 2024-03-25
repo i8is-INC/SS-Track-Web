@@ -214,7 +214,6 @@ function CaptureScreen() {
             flexDirection: "column",
             height: "100vh"
         }}>
-            <img src={imgFile} width={800} />
             <div style={{ margin: "0 0 20px 0" }}>
                 <img src={logo} />
             </div>

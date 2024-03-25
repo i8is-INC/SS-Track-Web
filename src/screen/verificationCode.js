@@ -32,7 +32,7 @@ function VerificationCode() {
         setLoading(true)
         try {
             const response = await axios.post(`${apiUrl}/superAdmin/verifycode`, {
-                email: "mabdullah@i8is.com",
+                email: localStorage.getItem("email"),
                 verification: digits.join("")
             })
             if (response.status) {

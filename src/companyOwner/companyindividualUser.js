@@ -616,7 +616,7 @@ function CompanyIndividualUser() {
                     </button>
                 </Modal.Footer>
             </Modal> : null}
-
+            
             {showTrimActivity ? <Modal show={showTrimActivity} onHide={() => {
                 setShowOfflineTime(true)
                 setShowTrimActivity(false)
@@ -902,7 +902,34 @@ function CompanyIndividualUser() {
                             {data && (data?.groupedScreenshots?.map((element) => {
                                 return (
                                     <div>
-                                        {loading ? <Skeleton count={1} width="300px" height="34.5px" style={{ margin: "40px 0 0 0" }} /> : <div className="timeZone" onMouseOver={() => setShowEditButton(true)} onMouseOut={() => setShowEditButton(false)}>
+                                        {loading ? <Skeleton count={1} width="300px" height="34.5px" style={{ margin: "40px 0 0 0" }} /> : <div
+                                        
+                                        onClick={() => {
+                                            console.log(element);
+                                            setShowTrimActivity(true)
+                                            setTrimActivity({
+                                                ...trimActivity,
+                                                timeentryId: element.timeentryId,
+                                                startTime: element.time.split(" ")[0] + " " + element.time.split(" ")[1],
+                                                endTime: element.time.split(" ")[3] + " " + element.time.split(" ")[4]
+                                            })
+                                            setSplitTime({
+                                                ...splitTime,
+                                                timeentryId: element.timeentryId,
+                                                startTime: element.time.split(" ")[0] + " " + element.time.split(" ")[1],
+                                                endTime: element.time.split(" ")[3] + " " + element.time.split(" ")[4]
+                                            })
+                                            setOfflineTime({
+                                                ...offlineTime,
+                                                timeentryId: element.timeentryId,
+                                                startTime: element.time.split(" ")[0] + " " + element.time.split(" ")[1],
+                                                endTime: element.time.split(" ")[3] + " " + element.time.split(" ")[4]
+                                            })
+                                            setStartTime(element.time.split(" ")[0] + " " + element.time.split(" ")[1])
+                                            setEndTime(element.time.split(" ")[3] + " " + element.time.split(" ")[4])
+                                        }}
+                                        style={{cursor:"pointer"}}
+                                        className="timeZone" onMouseOver={() => setShowEditButton(true)} onMouseOut={() => setShowEditButton(false)}>
                                             <p className="timeDuration">{element.time}</p>
                                             <OverlayTrigger placement="top" overlay={<Tooltip>{Math.floor(element?.totalactivity)} %</Tooltip>}>
                                                 <div className="circular-progress" style={{ margin: "0 20px", cursor: "pointer" }}>

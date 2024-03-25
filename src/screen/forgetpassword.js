@@ -40,6 +40,7 @@ function ForgetPassword() {
                         horizontal: "right"
                     }
                 })
+                localStorage.setItem("email", email)
                 setTimeout(() => {
                     navigate("/verification-code")
                 }, 2000);
@@ -48,7 +49,7 @@ function ForgetPassword() {
         catch (error) {
             console.log("catch error ===>", error);
             setLoading(false)
-            enqueueSnackbar("network error", {
+            enqueueSnackbar(error?.response?.data?.message ? error?.response?.data?.message : "Network error", {
                 variant: "error",
                 anchorOrigin: {
                     vertical: "top",

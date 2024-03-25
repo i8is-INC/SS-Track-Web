@@ -65,12 +65,11 @@ export default function AppRouter() {
   const [screenshotCount, setScreenshotCount] = useState(0);
   const [videoStream, setVideoStream] = useState(null);
   const [captureInterval, setCaptureInterval] = useState(null);
-
+  console.log('sadasd');
+  
   return (
     <>
       <Routes className="page-routes">
-        <Route path="/clickHR-login" element={<GeoxHR />} />
-
         <Route path="/" element={<Layout />}>
 
           {/* Public Routes */}

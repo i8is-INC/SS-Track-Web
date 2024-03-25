@@ -41,17 +41,10 @@ function UserDetails() {
     const [data, setData] = useState([]);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [ssData, setSSData] = useState(null);
-    const hours = Array.from({ length: 24 }, (_, i) => i);
 
-    const formatTime = (hour) => {
-        const formattedHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-        const period = hour < 12 ? 'AM' : 'PM';
-        return `${formattedHour.toString().padStart(2, '0')}:00 ${period}`;
-    };
     const [selectedImage, setSelectedImage] = useState(null);
     const [activeButton, setActiveButton] = useState(null);
     const location = useLocation();
-    const items = JSON.parse(localStorage.getItem('items'));
     const [timeBill, setTimeBill] = useState({});
     const [date, setDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(null);
@@ -63,6 +56,7 @@ function UserDetails() {
     const [showScrollButton, setShowScrollButton] = useState(false)
     const [editModalContent, setEditModalContent] = useState(null)
     const [splitTime, setSplitTime] = useState(null)
+    const [offlineTime, setOfflineTime] = useState(null)
 
     const [trimActivity, setTrimActivity] = useState(null)
     const [screenshotId, setScreenshotId] = useState(null)
@@ -81,8 +75,8 @@ function UserDetails() {
     const [activeMonth, setActiveMonth] = useState(new Date().toLocaleDateString())
     const [current_day, set_current_day] = useState(null)
     const [current_month, set_current_month] = useState(null)
+    const [timeTrackingId, setTimeTrackingId] = useState(null)
 
-    const userId = items?._id;
     const currentMonths = (new Date().getMonth() + 1).toString().padStart(2, '0');
     const currentDate = new Date().getDate().toString().padStart(2, '0');
     const todayDate = `${today}-${currentMonths}-${currentDate}`;
@@ -91,14 +85,17 @@ function UserDetails() {
     const months = ["January", "Feburary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     const currentMonth = new Date().getMonth();
     const currentDay = new Date().getDay();
+    const [startTime, setStartTime] = useState(null)
+    const [endTime, setEndTime] = useState(null)
+    const [deleteActivity, setDeleteActivity] = useState(false)
 
     const apiUrl = "https://combative-fox-jumpsuit.cyclic.app/api/v1";
     let token = localStorage.getItem('token');
+    let items = JSON.parse(localStorage.getItem('items'));
     let headers = {
-        Authorization: 'Bearer ' + token,
+        Authorization: "Bearer " + token,
     }
-    let startsTime;
-    let endsTime;
+    const userId = items?._id;
 
     const navigate = useNavigate("")
 
@@ -221,6 +218,7 @@ function UserDetails() {
                 }, 100);
                 setData(response.data.data);
                 setTimeEntryId(response.data.data.TimeTrackingId)
+                setTimeTrackingId(response.data.data.TimeTrackingId)
                 setTimeEntries(response?.data?.data?.groupedScreenshots || []);
                 setTrimActivity({ ...trimActivity, totalHours: response?.data?.data?.totalHours.daily })
                 console.log(response);
@@ -530,9 +528,104 @@ function UserDetails() {
     const offsetSign = offsetInHours >= 0 ? '+' : '-';
     const formattedOffset = `${offsetSign}${Math.abs(offsetInHours)}`;
 
+    const handleTrimActivity = async () => {
+        setShowOfflineTime(false)
+        setShowTrimActivity(false)
+        setShowSplitActivity(false)
+        const timeEntryId = trimActivity?.timeentryId
+        if (deleteActivity === false) {
+            const formattedStartTime = formattedDate + " " + trimActivity?.startTime;
+            const formattedEndTime = formattedDate + " " + trimActivity?.endTime;
+            try {
+                const response = await axios.patch(`${apiUrl}/superAdmin/trim-activity/${userId}/${timeEntryId}`, {
+                    startTime: formattedStartTime,
+                    endTime: formattedEndTime,
+                }, {
+                    headers: {
+                        Authorization: 'Bearer ' + token
+                    }
+                });
+                if (response.status === 200) {
+                    enqueueSnackbar(response.data.data.message, {
+                        variant: "success",
+                        anchorOrigin: {
+                            vertical: "top",
+                            horizontal: "right"
+                        }
+                    })
+                    fetchData()
+                    console.log(response);
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        else {
+            try {
+                const response = await axios.delete(`${apiUrl}/superAdmin/time-tracking/${timeTrackingId}/activity/${timeEntryId}`, {
+                    headers: {
+                        Authorization: 'Bearer ' + token
+                    }
+                });
+                if (response.status === 200) {
+                    enqueueSnackbar(response.data.message, {
+                        variant: "success",
+                        anchorOrigin: {
+                            vertical: "top",
+                            horizontal: "right"
+                        }
+                    })
+                    fetchData()
+                    console.log(response);
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    };
+
+    const handleAddOfflineTime = async () => {
+        setShowOfflineTime(false)
+        setShowSplitActivity(false)
+        setShowTrimActivity(false)
+        console.log({
+            startTime: formattedDate + " " + offlineTime?.startTime,
+            endTime: formattedDate + " " + offlineTime?.endTime,
+            projectId: "643fb528272a1877e4fcf30e",
+            notes: "Offline activity description"
+        });
+        try {
+            const response = await axios.post(`${apiUrl}/superAdmin/offline-time/${userId}`, {
+                startTime: formattedDate + " " + offlineTime?.startTime,
+                endTime: formattedDate + " " + offlineTime?.endTime,
+                projectId: "643fb528272a1877e4fcf30e",
+                notes: "Offline activity description"
+            }, {
+                headers: {
+                    Authorization: 'Bearer ' + token
+                }
+            })
+            if (response.status === 200) {
+                enqueueSnackbar("offline time added", {
+                    variant: "success",
+                    anchorOrigin: {
+                        vertical: "top",
+                        horizontal: "right"
+                    }
+                })
+                console.log(response);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const handleDivClick = () => {
+        setDeleteActivity(!deleteActivity);
+    };
+
     return (
         <div>
-
             {showScrollButton === true ? <BackToTop /> : null}
 
             {showDeleteModal ? <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} animation={true} centered>
@@ -550,7 +643,7 @@ function UserDetails() {
                 </Modal.Footer>
             </Modal> : null}
 
-            {/* {showTrimActivity ? <Modal show={showTrimActivity} onHide={() => {
+            {showTrimActivity ? <Modal show={showTrimActivity} onHide={() => {
                 setShowOfflineTime(true)
                 setShowTrimActivity(false)
                 setShowSplitActivity(false)
@@ -559,12 +652,17 @@ function UserDetails() {
                     <p style={{ marginBottom: "20px", fontWeight: "700", fontSize: "20px" }}>Edit time</p>
                     <div className="editBoxLowerDiv">
                         <p>You can trim activity time, or edit activity note. <br />
-                            If you need add time, then <a onClick={() => {
+                            If you need add time, then <span style={{ cursor: "pointer", fontWeight: "bold", textDecoration: "underline" }} onClick={() => {
                                 setShowOfflineTime(true)
                                 setShowTrimActivity(false)
                                 setShowSplitActivity(false)
-                            }}>Add Offline Time </a> instead
+                            }}>Add Offline Time </span> instead
                         </p>
+
+                        {trimActivity?.startTime < startTime || trimActivity?.endTime > endTime ? (
+                            <p style={{ color: "red" }}>`From` and `To` must be within current bounds. <br /> To add extra time, Add Offline Time instead.</p>
+                        ) : null}
+
                         <div className="editboxinputdiv">
                             <input onChange={(e) => setTrimActivity({ ...trimActivity, startTime: e.target.value })} value={trimActivity?.startTime} />
                             -
@@ -572,7 +670,7 @@ function UserDetails() {
                             <p>-{trimActivity?.totalHours ? trimActivity?.totalHours : "0h 0m"}</p>
                         </div>
                         <p className="sevenAm">eg 7am to 9:10am or 17:30 to 22:00</p>
-                        <div>
+                        {/* <div>
                             <select className="projectOption" defaultValue="">
                                 <option>Infiniti Solutions</option>
                                 <option>Y8HR</option>
@@ -580,22 +678,22 @@ function UserDetails() {
                                 <option>Geox HR</option>
                                 <option>Click HR</option>
                             </select>
-                        </div>
+                        </div> */}
                         <textarea placeholder="Note (optional)" rows="5" ></textarea>
                         <div className="deleteActivityPart">
-                            <div style={{ cursor: "pointer" }}>
-                                <input id="editcheck" type="checkbox" />
-                                <p style={{ margin: 0, padding: 0 }}>Delete this activity</p>
+                            <div style={{ cursor: "pointer", display: "flex", alignItems: "center" }} onClick={handleDivClick}>
+                                <input id="editcheck" type="checkbox" checked={deleteActivity} onChange={(e) => setDeleteActivity(e.target.checked)} />
+                                <p style={{ margin: "0 0 0 10px", padding: 0 }}>Delete this activity</p>
                             </div>
-                            <a href="#" onClick={() => {
+                            <p style={{ margin: 0, cursor: "pointer" }} onClick={() => {
                                 setShowSplitActivity(true)
                                 setShowTrimActivity(false)
-                            }}>Split Activity</a>
+                            }}>Split Activity</p>
                         </div>
                     </div>
                 </Modal.Body>
                 <Modal.Footer>
-                    <button className="teamActionButton">
+                    <button className="teamActionButton" onClick={handleTrimActivity}>
                         SAVE CHANGES
                     </button>
                     <button className="teamActionButton" onClick={() => {
@@ -606,7 +704,7 @@ function UserDetails() {
                         CANCEL
                     </button>
                 </Modal.Footer>
-            </Modal> : null} */}
+            </Modal> : null}
 
             {showSplitActivity ? <Modal show={showSplitActivity} onHide={() => {
                 setShowSplitActivity(false)
@@ -617,7 +715,9 @@ function UserDetails() {
                     <p style={{ marginBottom: "20px", fontWeight: "700", fontSize: "20px" }}>Edit time</p>
                     <div className="editBoxLowerDiv">
                         <div className="editboxinputdiv">
-                            <input placeholder="9:05" />-<input placeholder="split" />-<input placeholder="10:00" /> <p>-0h 40m</p>
+                            <input disabled={true} value={splitTime?.startTime} />
+                            -<input value={splitTime?.splitTime} onChange={(e) => setSplitTime({ ...splitTime, splitTime: e.target.value })} placeholder="split" />-
+                            <input disabled={true} value={splitTime?.endTime} /> <p>-0h 40m</p>
                         </div>
                     </div>
                 </Modal.Body>
@@ -635,7 +735,7 @@ function UserDetails() {
                 </Modal.Footer>
             </Modal> : null}
 
-            {/* {showOfflineTime ? <Modal show={showOfflineTime} onHide={() => {
+            {showOfflineTime ? <Modal show={showOfflineTime} onHide={() => {
                 setShowOfflineTime(false)
                 setShowSplitActivity(false)
                 setShowTrimActivity(false)
@@ -647,23 +747,26 @@ function UserDetails() {
                             You will able to edit or delete from there
                         </p>
                         <div className="editboxinputdiv">
-                            <input placeholder="From" />-<input placeholder="To" /> <p>-0h 40m</p>
+                            <input onChange={(e) => setOfflineTime({ ...offlineTime, startTime: e.target.value })} value={offlineTime?.startTime} />
+                            -
+                            <input onChange={(e) => setOfflineTime({ ...offlineTime, endTime: e.target.value })} value={offlineTime?.endTime} />
+                            <p>-{offlineTime?.totalHours ? offlineTime?.totalHours : "0h 0m"}</p>
                         </div>
                         <p className="sevenAm">eg 7am to 9:10am or 17:30 to 22:00</p>
                         <div>
                             <select className="projectOption">
-                                <option>Infiniti solution</option>
-                                <option>Infiniti solution</option>
-                                <option>Infiniti solution</option>
-                                <option>Infiniti solution</option>
-                                <option>Infiniti solution</option>
+                                <option>Infiniti Solutions</option>
+                                <option>Y8HR</option>
+                                <option>Peel HR</option>
+                                <option>Geox HR</option>
+                                <option>Click HR</option>
                             </select>
                         </div>
                         <textarea placeholder="Note (optional)" rows="5" ></textarea>
                     </div>
                 </Modal.Body>
                 <Modal.Footer>
-                    <button className="teamActionButton">
+                    <button className="teamActionButton" onClick={handleAddOfflineTime}>
                         SAVE CHANGES
                     </button>
                     <button className="teamActionButton" onClick={() => {
@@ -674,7 +777,7 @@ function UserDetails() {
                         CANCEL
                     </button>
                 </Modal.Footer>
-            </Modal> : null} */}
+            </Modal> : null}
 
             <SnackbarProvider />
             <div className="container">
@@ -685,92 +788,97 @@ function UserDetails() {
                         </div>
                         <div className="headerTop">
                             <p>All times are UTC {formattedOffset}</p>
-                            <img src={setting} alt="setting.png" style={{ cursor: "pointer" }} onClick={() => navigate("/account")} />
+                            <img
+                                src={setting}
+                                alt="setting.png"
+                                style={{ cursor: "pointer" }}
+                                onClick={() => {
+                                    navigate("/owner-account")
+                                }}
+                            />
                         </div>
                     </div>
                     <div className="userMainContent">
-                        <div>
-                            <div className="calendar-container">
-                                <div className="header">
-                                    <img src={left} onClick={prevMonth} alt="Previous Month" />
-                                    <h2 className="monthName">{date.toLocaleString("en-US", { month: "long", year: "numeric" })}</h2>
-                                    <img src={right} onClick={nextMonth} alt="Next Month" />
+                        <div className="calendar-container">
+                            <div className="header">
+                                <img src={left} onClick={prevMonth} alt="Previous Month" />
+                                <h2 className="monthName">{date.toLocaleString("en-US", { month: "long", year: "numeric" })}</h2>
+                                <img src={right} onClick={nextMonth} alt="Next Month" />
+                            </div>
+                        </div>
+                        <div className="days-weeks">{renderCalendar()}</div>
+                        <div className="timerAndTracking">
+                            <div style={{ margin: "0 10px 0 0" }} className="timerLeft">
+                                <div>
+                                    <img width={120} src={logo} alt="" />
+                                </div>
+                                <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center", textAlign: "center" }}>
+                                    <p className="weekDayTimer">{formattedDate == todayDate ? days[currentDay] : days[clickDay]} </p>
+                                    <p className="weekDayTimer">{formattedDate && formattedDate.split('-')[2]}</p>
+                                    <p className="weekDateTimer">{formattedDate == todayDate ? months[currentMonth] : months[month]}</p>
+                                    <OverlayTrigger placement="top" overlay={<Tooltip>{Math.floor(data?.totalactivity)} %</Tooltip>}>
+                                        <div className="circular-progress" style={{
+                                            cursor: "pointer"
+                                        }}>
+                                            <CircularProgressBar activityPercentage={data?.totalactivity} size={30} />
+                                        </div>
+                                    </OverlayTrigger>
+                                    <p className="timerClock">{data?.totalHours?.daily}</p>
+                                    <p className="weekTimer">Week</p>
+                                    <p className="weekTimerDigit">{data?.totalHours?.weekly}</p>
+                                    <img src={circleDot} alt="CircleDot.png" />
+                                    <p className="weekTimer">Month</p>
+                                    <p className="monthTimerDigit">{data?.totalHours?.monthly}</p>
                                 </div>
                             </div>
-                            <div className="days-weeks">{renderCalendar()}</div>
-                            <div className="timerAndTracking">
-                                <div style={{ margin: "0 10px 0 0" }} className="timerLeft">
-                                    <div>
-                                        <img width={120} src={logo} alt="" />
-                                    </div>
-                                    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center", textAlign: "center" }}>
-                                        <p className="weekDayTimer">{formattedDate == todayDate ? days[currentDay] : days[clickDay]} </p>
-                                        <p className="weekDayTimer">{formattedDate && formattedDate.split('-')[2]}</p>
-                                        <p className="weekDateTimer">{formattedDate == todayDate ? months[currentMonth] : months[month]}</p>
-                                        <OverlayTrigger placement="top" overlay={<Tooltip>{Math.floor(data?.totalactivity)} %</Tooltip>}>
-                                            <div className="circular-progress" style={{
-                                                cursor: "pointer"
-                                            }}>
-                                                <CircularProgressBar activityPercentage={data?.totalactivity} size={30} />
-                                            </div>
-                                        </OverlayTrigger>
-                                        <p className="timerClock">{data?.totalHours?.daily}</p>
-                                        <p className="weekTimer">Week</p>
-                                        <p className="weekTimerDigit">{data?.totalHours?.weekly}</p>
-                                        <img src={circleDot} alt="CircleDot.png" />
-                                        <p className="weekTimer">Month</p>
-                                        <p className="monthTimerDigit">{data?.totalHours?.monthly}</p>
-                                    </div>
+                            <div className="activity-image-container">
+                                <div className="activityMainHeading">
+                                    <h4 className="activityMainHeadingContent">Activity Tracker</h4>
+                                    <p className="activityMainContent">Activity Level</p>
                                 </div>
-                                <div className="activity-image-container">
-                                    <div className="activityMainHeading">
-                                        <h4 className="activityMainHeadingContent">Activity Tracker</h4>
-                                        <p className="activityMainContent">Activity Level</p>
-                                    </div>
-                                    <div className="activityMeternContent">
-                                        <div className="activityMeterContentMain">
-                                            <div className="activityMeterContent">
-                                                <img src={perc_20} alt="" />
-                                                <p className="activityMeterContentPercent">0 - 20 %</p>
-                                            </div>
-                                            <div className="activityMeterContent">
-                                                <img src={perc_40} alt="" />
-                                                <p className="activityMeterContentPercent">21 - 40 %</p>
-                                            </div>
-                                            <div className="activityMeterContent">
-                                                <img src={perc_60} alt="" />
-                                                <p className="activityMeterContentPercent">41 - 60 %</p>
-                                            </div>
-                                            <div className="activityMeterContent">
-                                                <img src={perc_80} alt="" />
-                                                <p className="activityMeterContentPercent">61 - 80 %</p>
-                                            </div>
-                                            <div className="activityMeterContent">
-                                                <img src={perc_100} alt="" />
-                                                <p className="activityMeterContentPercent">81 - 100 %</p>
-                                            </div>
+                                <div className="activityMeternContent">
+                                    <div className="activityMeterContentMain">
+                                        <div className="activityMeterContent">
+                                            <img src={perc_20} alt="" />
+                                            <p className="activityMeterContentPercent">0 - 20 %</p>
                                         </div>
-                                        <div className="activityMeterMain">
-                                            <div className="activityMeterMainContainer">
-                                                <img className="activityMeterMainImage" src={activityImage} alt="" />
-                                                <div className="needleContainerMain">
-                                                    <div
-                                                        className="needleContainerMainAlingment"
-                                                        style={{
-                                                            transform: `translateY(-50%) rotate(${Math.floor(data?.totalactivity) <= 20 ? -75 :
-                                                                Math.floor(data?.totalactivity) > 20 && Math.floor(data?.totalactivity) <= 40 ? -38 :
-                                                                    Math.floor(data?.totalactivity) > 40 && Math.floor(data?.totalactivity) <= 60 ? 0 :
-                                                                        Math.floor(data?.totalactivity) > 60 && Math.floor(data?.totalactivity) <= 80 ? 35 :
-                                                                            Math.floor(data?.totalactivity) > 80 ? 75 : -108
-                                                                }deg)`
-                                                        }}>
-                                                        <div className="needleContainerAlingment">
-                                                            <div className="diamond"></div>
-                                                            <div className="needlePointerMain"></div>
-                                                            <OverlayTrigger placement="bottom" overlay={<Tooltip>{Math.floor(data?.totalactivity)} %</Tooltip>}>
-                                                                <div className="needleScrewMain"></div>
-                                                            </OverlayTrigger>
-                                                        </div>
+                                        <div className="activityMeterContent">
+                                            <img src={perc_40} alt="" />
+                                            <p className="activityMeterContentPercent">21 - 40 %</p>
+                                        </div>
+                                        <div className="activityMeterContent">
+                                            <img src={perc_60} alt="" />
+                                            <p className="activityMeterContentPercent">41 - 60 %</p>
+                                        </div>
+                                        <div className="activityMeterContent">
+                                            <img src={perc_80} alt="" />
+                                            <p className="activityMeterContentPercent">61 - 80 %</p>
+                                        </div>
+                                        <div className="activityMeterContent">
+                                            <img src={perc_100} alt="" />
+                                            <p className="activityMeterContentPercent">81 - 100 %</p>
+                                        </div>
+                                    </div>
+                                    <div className="activityMeterMain">
+                                        <div className="activityMeterMainContainer">
+                                            <img className="activityMeterMainImage" src={activityImage} alt="" />
+                                            <div className="needleContainerMain">
+                                                <div
+                                                    className="needleContainerMainAlingment"
+                                                    style={{
+                                                        transform: `translateY(-50%) rotate(${Math.floor(data?.totalactivity) <= 20 ? -75 :
+                                                            Math.floor(data?.totalactivity) > 20 && Math.floor(data?.totalactivity) <= 40 ? -38 :
+                                                                Math.floor(data?.totalactivity) > 40 && Math.floor(data?.totalactivity) <= 60 ? 0 :
+                                                                    Math.floor(data?.totalactivity) > 60 && Math.floor(data?.totalactivity) <= 80 ? 35 :
+                                                                        Math.floor(data?.totalactivity) > 80 ? 75 : -108
+                                                            }deg)`
+                                                    }}>
+                                                    <div className="needleContainerAlingment">
+                                                        <div className="diamond"></div>
+                                                        <div className="needlePointerMain"></div>
+                                                        <OverlayTrigger placement="bottom" overlay={<Tooltip>{Math.floor(data?.totalactivity)} %</Tooltip>}>
+                                                            <div className="needleScrewMain"></div>
+                                                        </OverlayTrigger>
                                                     </div>
                                                 </div>
                                             </div>
@@ -778,152 +886,193 @@ function UserDetails() {
                                     </div>
                                 </div>
                             </div>
-                            {/* <div className="timerAndTracking">
-                                <div style={{ margin: "0 10px 0 0" }} className="timerLeft">
-                                    <div>
-                                        <img width={120} src={logo} alt="" />
-                                    </div>
-                                    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center", textAlign: "center" }}>
-                                        <p className="weekDayTimer">{formattedDate == todayDate ? days[currentDay] : days[clickDay]} </p>
-                                        <p className="weekDayTimer">{formattedDate && formattedDate.split('-')[2]}</p>
-                                        <p className="weekDateTimer">{formattedDate == todayDate ? months[currentMonth] : months[month]}</p>
-                                        <OverlayTrigger placement="top" overlay={<Tooltip>{Math.floor(data?.totalactivity)} %</Tooltip>}>
-                                            <div className="circular-progress" style={{
-                                                cursor: "pointer"
-                                            }}>
-                                                <CircularProgressBar activityPercentage={data?.totalactivity} size={30} />
-                                            </div>
-                                        </OverlayTrigger>
-                                        <p className="timerClock">{data?.totalHours?.daily}</p>
-                                        <p className="weekTimer">Week</p>
-                                        <p className="weekTimerDigit">{data?.totalHours?.weekly}</p>
-                                        <img src={circleDot} alt="CircleDot.png" />
-                                        <p className="weekTimer">Month</p>
-                                        <p className="monthTimerDigit">{data?.totalHours?.monthly}</p>
-                                    </div>
-                                </div>
-                                <div className="activity-image-container" style={{ margin: "0 0 0 10px" }}>
-                                    <div className="needle-container">
-                                        <div className="needle"></div>
-                                        <div className="dot"></div>
-                                    </div>
-                                    <img className="activity-image" src={activityImage} alt="" />
-                                </div>
-                            </div> */}
-                            <div className="time-scale" style={{ display: "flex" }}>
-                                {renderTimeIntervals()}
-                            </div>
-
-                            <div>
-
-                                {data && (data?.groupedScreenshots?.map((element) => {
-                                    return (
-                                        <div>
-                                            {loading ? <Skeleton count={1} width="300px" height="34.5px" style={{ margin: "40px 0 0 0" }} /> : <div className="timeZone" onMouseOver={() => setShowEditButton(true)} onMouseOut={() => setShowEditButton(false)}>
-                                                <p className="timeDuration">{element.time}</p>
-                                                <OverlayTrigger placement="top" overlay={<Tooltip>{Math.floor(element?.totalactivity)} %</Tooltip>}>
-                                                    <div className="circular-progress" style={{ margin: "0 20px", cursor: "pointer" }}>
-                                                        <CircularProgressBar activityPercentage={element?.totalactivity} size={30} />
-                                                    </div>
-                                                </OverlayTrigger>
-                                                {showEditButton && <img onClick={() => {
-                                                    setShowTrimActivity(true)
-                                                    setSplitTime({
-                                                        ...splitTime,
-                                                        timeentryId: element.timeentryId,
-                                                        startTime: element.time.split(" ")[0] + " " + element.time.split(" ")[1],
-                                                        endTime: element.time.split(" ")[3] + " " + element.time.split(" ")[4]
-                                                    })
-                                                }} src={edit} alt="EditTimeZone.png" style={{ cursor: "pointer" }} />}
-                                            </div>}
-                                            <div style={{
-                                                display: "grid",
-                                                gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-                                                gap: "20px",
-                                            }}>
-                                                {element?.screenshots && (element?.screenshots?.map((elements, index) => {
-                                                    return loading ? (
-                                                        <Skeleton count={1} width="364px" height="248.44px" style={{ margin: "20px 0 12px 0" }} />
-                                                    ) : (
-                                                        <div className="projectAdd" onMouseOver={() => setShowDeleteButton(true)} onMouseOut={() => setShowDeleteButton(false)}>
-                                                            <div className="timelineDiv">
-                                                                <div>
-                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{elements?.description}</Tooltip>}>
-                                                                        <p className="notes">
-                                                                            <a className="websiteLink" href="#">{elements?.time} {elements?.description}</a>
-                                                                        </p>
-                                                                    </OverlayTrigger>
-                                                                </div>
-                                                                <div style={{ display: "flex" }}>
-                                                                    <img src={deleteIcon} alt="" style={{ marginRight: 15 }} onClick={() => handleOpenDeleteModal(element, elements)} />
-                                                                    {elements?.visitedUrls?.length === 0 ?
-                                                                        <OverlayTrigger placement="top" overlay={<Tooltip>0 %</Tooltip>}>
-                                                                            <div className="circular-progress">
-                                                                                <CircularProgressBar activityPercentage={0} size={30} emptyUrl={0} />
-                                                                            </div>
-                                                                        </OverlayTrigger>
-                                                                        :
-                                                                        elements?.visitedUrls?.map((e) => {
-                                                                            return e?.activityPercentage === 0 ? (
-                                                                                <OverlayTrigger placement="top" overlay={<Tooltip>0 %</Tooltip>}>
-                                                                                    <div className="circular-progress">
-                                                                                        <CircularProgressBar activityPercentage={0} size={30} emptyUrl={0} />
-                                                                                    </div>
-                                                                                </OverlayTrigger>
-                                                                            ) : (
-                                                                                <OverlayTrigger placement="top" overlay={<Tooltip>{Math.floor(e?.activityPercentage)} %</Tooltip>}>
-                                                                                    <div className="circular-progress">
-                                                                                        <CircularProgressBar activityPercentage={e?.activityPercentage} size={30} />
-                                                                                    </div>
-                                                                                </OverlayTrigger>
-                                                                            )
-                                                                        })}
-                                                                </div>
-                                                            </div>
-                                                            <div className="screenShotImg">
-                                                                <img className="screenshotiimage" onClick={() => openModal(element, elements?.key, index)} src={elements?.key} alt="ScreenShotImg.png" />
-                                                            </div>
-                                                        </div>
-                                                    )
-                                                }))}
-
-                                                {selectedImage && (
-                                                    <div className="fullscreen-screenshot-model">
-                                                        <div style={{ margin: "20px 20px 0 20px", textAlign: "right" }}>
-                                                            <ImCross size={20} color="white" onClick={closeModal} />
-                                                        </div>
-                                                        <div className="ss-image">
-                                                            <div className="d-flex align-items-center gap-5">
-                                                                <div
-                                                                    onClick={() => {
-                                                                        goBackToPreviousImage(element.screenshots)
-                                                                    }}>
-                                                                    <img width={40} src={leftArrow} />
-                                                                </div>
-                                                                <div>
-                                                                    <img className="modalImage" src={selectedImage} alt="Pop-up Image" />
-                                                                </div>
-                                                                <div
-                                                                    onClick={() => {
-                                                                        goToNextImage(element.screenshots)
-                                                                    }}>
-                                                                    <img width={40} src={rightArrow} />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )
-                                }))}
-                            </div>
-
                         </div>
+                        {/* <div className="timerAndTracking">
+                            <div style={{ margin: "0 10px 0 0" }} className="timerLeft">
+                                <div>
+                                    <img width={120} src={logo} alt="" />
+                                </div>
+                                <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center", textAlign: "center" }}>
+                                    <p className="weekDayTimer">{formattedDate == todayDate ? days[currentDay] : days[clickDay]} </p>
+                                    <p className="weekDayTimer">{formattedDate && formattedDate.split('-')[2]}</p>
+                                    <p className="weekDateTimer">{formattedDate == todayDate ? months[currentMonth] : months[month]}</p>
+                                    <OverlayTrigger placement="top" overlay={<Tooltip>{Math.floor(data?.totalactivity)} %</Tooltip>}>
+                                        <div className="circular-progress" style={{
+                                            cursor: "pointer"
+                                        }}>
+                                            <CircularProgressBar activityPercentage={data?.totalactivity} size={30} />
+                                        </div>
+                                    </OverlayTrigger>
+                                    <p className="timerClock">{data?.totalHours?.daily}</p>
+                                    <p className="weekTimer">Week</p>
+                                    <p className="weekTimerDigit">{data?.totalHours?.weekly}</p>
+                                    <img src={circleDot} alt="CircleDot.png" />
+                                    <p className="weekTimer">Month</p>
+                                    <p className="monthTimerDigit">{data?.totalHours?.monthly}</p>
+                                </div>
+                            </div>
+                            <div className="activity-image-container" style={{ margin: "0 0 0 10px" }}>
+                                <div className="needle-container">
+                                    <div className="needle"></div>
+                                    <div className="dot"></div>
+                                </div>
+                                <img className="activity-image" src={activityImage} alt="" />
+                            </div>
+                        </div> */}
+                        <div className="time-scale" style={{ display: "flex" }}>
+                            {renderTimeIntervals()}
+                        </div>
+                        <div>
+                            {data && (data?.groupedScreenshots?.map((element) => {
+                                return (
+                                    <div>
+                                        {loading ? <Skeleton count={1} width="300px" height="34.5px" style={{ margin: "40px 0 0 0" }} /> : <div
+                                            onClick={() => {
+                                                setShowTrimActivity(true)
+                                                setTrimActivity({
+                                                    ...trimActivity,
+                                                    timeentryId: element.timeentryId,
+                                                    startTime: element.time.split(" ")[0] + " " + element.time.split(" ")[1],
+                                                    endTime: element.time.split(" ")[3] + " " + element.time.split(" ")[4]
+                                                })
+                                                setSplitTime({
+                                                    ...splitTime,
+                                                    timeentryId: element.timeentryId,
+                                                    startTime: element.time.split(" ")[0] + " " + element.time.split(" ")[1],
+                                                    endTime: element.time.split(" ")[3] + " " + element.time.split(" ")[4]
+                                                })
+                                                setOfflineTime({
+                                                    ...offlineTime,
+                                                    timeentryId: element.timeentryId,
+                                                    startTime: element.time.split(" ")[0] + " " + element.time.split(" ")[1],
+                                                    endTime: element.time.split(" ")[3] + " " + element.time.split(" ")[4]
+                                                })
+                                                setStartTime(element.time.split(" ")[0] + " " + element.time.split(" ")[1])
+                                                setEndTime(element.time.split(" ")[3] + " " + element.time.split(" ")[4])
+                                            }}
+                                            style={{ cursor: "pointer" }}
+                                            className="timeZone" onMouseOver={() => setShowEditButton(true)} onMouseOut={() => setShowEditButton(false)}>
+                                            <p className="timeDuration">{element.time}</p>
+                                            <OverlayTrigger placement="top" overlay={<Tooltip>{Math.floor(element?.totalactivity)} %</Tooltip>}>
+                                                <div className="circular-progress" style={{ margin: "0 20px", cursor: "pointer" }}>
+                                                    <CircularProgressBar activityPercentage={element?.totalactivity} size={30} />
+                                                </div>
+                                            </OverlayTrigger>
+                                            {showEditButton && <img onClick={() => {
+                                                console.log(element);
+                                                setShowTrimActivity(true)
+                                                setTrimActivity({
+                                                    ...trimActivity,
+                                                    timeentryId: element.timeentryId,
+                                                    startTime: element.time.split(" ")[0] + " " + element.time.split(" ")[1],
+                                                    endTime: element.time.split(" ")[3] + " " + element.time.split(" ")[4]
+                                                })
+                                                setSplitTime({
+                                                    ...splitTime,
+                                                    timeentryId: element.timeentryId,
+                                                    startTime: element.time.split(" ")[0] + " " + element.time.split(" ")[1],
+                                                    endTime: element.time.split(" ")[3] + " " + element.time.split(" ")[4]
+                                                })
+                                                setOfflineTime({
+                                                    ...offlineTime,
+                                                    timeentryId: element.timeentryId,
+                                                    startTime: element.time.split(" ")[0] + " " + element.time.split(" ")[1],
+                                                    endTime: element.time.split(" ")[3] + " " + element.time.split(" ")[4]
+                                                })
+                                                setStartTime(element.time.split(" ")[0] + " " + element.time.split(" ")[1])
+                                                setEndTime(element.time.split(" ")[3] + " " + element.time.split(" ")[4])
+                                            }} src={edit} alt="EditTimeZone.png" style={{ cursor: "pointer" }} />}
+                                        </div>}
+                                        <div style={{
+                                            display: "grid",
+                                            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+                                            gap: "20px",
+                                        }}>
+                                            {element?.screenshots && (element?.screenshots?.map((elements, index) => {
+                                                return loading ? (
+                                                    <Skeleton count={1} width="364px" height="248.44px" style={{ margin: "20px 0 12px 0" }} />
+                                                ) : (
+                                                    <div className="projectAdd" onMouseOver={() => setShowDeleteButton(true)} onMouseOut={() => setShowDeleteButton(false)}>
+                                                        <div className="timelineDiv">
+                                                            <div>
+                                                                <OverlayTrigger placement="top" overlay={<Tooltip>{elements?.description}</Tooltip>}>
+                                                                    <p className="notes">
+                                                                        <a className="websiteLink" href="#">{elements?.time} {elements?.description}</a>
+                                                                    </p>
+                                                                </OverlayTrigger>
+                                                            </div>
+                                                            <div style={{ display: "flex" }}>
+                                                                <img src={deleteIcon} alt="" style={{ marginRight: 5 }} onClick={() => handleOpenDeleteModal(element, elements)} />
+                                                                {elements?.visitedUrls?.length === 0 ?
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>0 %</Tooltip>}>
+                                                                        <div className="circular-progress">
+                                                                            <CircularProgressBar activityPercentage={0} size={30} emptyUrl={0} />
+                                                                        </div>
+                                                                    </OverlayTrigger>
+                                                                    :
+                                                                    elements?.visitedUrls?.map((e) => {
+                                                                        return e?.activityPercentage === 0 ? (
+                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>0 %</Tooltip>}>
+                                                                                <div className="circular-progress">
+                                                                                    <CircularProgressBar activityPercentage={0} size={30} emptyUrl={0} />
+                                                                                </div>
+                                                                            </OverlayTrigger>
+                                                                        ) : (
+                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>{Math.floor(e?.activityPercentage)} %</Tooltip>}>
+                                                                                <div className="circular-progress">
+                                                                                    <CircularProgressBar activityPercentage={e?.activityPercentage} size={30} />
+                                                                                </div>
+                                                                            </OverlayTrigger>
+                                                                        )
+                                                                    })}
+                                                            </div>
+                                                        </div>
+                                                        <div className="screenShotImg">
+                                                            <img className="screenshotiimage" onClick={() => openModal(element, elements?.key, index)} src={elements?.key} alt="ScreenShotImg.png" />
+                                                        </div>
+                                                    </div>
+                                                )
+                                            }))}
+                                            {selectedImage && (
+                                                <div className="fullscreen-screenshot-model">
+                                                    <div style={{ margin: "20px 20px 0 20px", textAlign: "right" }}>
+                                                        <ImCross size={20} color="white" onClick={closeModal} />
+                                                    </div>
+                                                    <div className="ss-image">
+                                                        <div className="d-flex align-items-center gap-5">
+                                                            <div
+                                                                onClick={() => {
+                                                                    goBackToPreviousImage(element.screenshots)
+                                                                }}>
+                                                                <img width={40} src={leftArrow} />
+                                                            </div>
+                                                            <div>
+                                                                <img className="modalImage" src={selectedImage} alt="Pop-up Image" />
+                                                            </div>
+                                                            <div
+                                                                onClick={() => {
+                                                                    goToNextImage(element.screenshots)
+                                                                }}>
+                                                                <img width={40} src={rightArrow} />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )
+                            }))}
+                        </div>
+
+                        {/* <div className="historyButton">
+                            <img className="historyImg" src={historyIcon} alt="HistoryIcon.png" />
+                            <p className="historyOfChanges">History of Changes</p>
+                        </div> */}
                     </div>
                 </div>
+                <img className="userDetailLine" src={line} />
             </div>
-            <img className="userDetailLine" src={line} />
         </div>
     )
 }
