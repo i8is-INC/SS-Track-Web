@@ -141,7 +141,7 @@ function AdminDashboard() {
                                                 alt="Screenshot"
                                             />
                                             <p className="dashheadingtop">
-                                                ({user?.minutesAgo === "0 minute ago" || user?.minutesAgo === "-1 minute ago" ? "a minute ago" : user?.minutesAgo})
+                                                ({user?.minutesAgo === "0 minutes ago" ? "a minute ago" : user?.minutesAgo})
                                             </p>
                                         </div>
                                         <div className="nameVerified">

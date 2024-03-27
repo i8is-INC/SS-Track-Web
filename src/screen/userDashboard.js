@@ -124,7 +124,7 @@ function UserDasboard() {
                                         alt="Screenshot"
                                     />
                                     <p className="dashheadingtop">
-                                        ({data?.data?.lastActiveTime === "0 minute ago" || data?.data?.lastActiveTime === "-1 minute ago" ? "a minute ago" : data?.data?.lastActiveTime})
+                                        ({data?.data?.lastActiveTime === "0 minutes ago" ? "a minute ago" : data?.data?.lastActiveTime})
                                     </p>
                                 </div>
                                 <div className="nameVerified">
